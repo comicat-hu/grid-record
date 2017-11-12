@@ -96,7 +96,6 @@
             event.preventDefault();
             var gridUrl = 'https://the-grid.org/r/export/';
             var userKey = $('.userKey').val() || '';
-            console.log('ready ' + userKey);
             if (records) {
                 return draw();
             }
@@ -143,7 +142,7 @@
             var chartSet = chart.enter().append('div');
             chartSet.exit().remove();
             chartSet.style('height', '20px');
-            chartSet.style('width', '500px');
+            chartSet.style('width', '80%');
             chartSet.style('margin', '2px');
             chartSet.style('background', function (data, index) {
                 var value = data[1];
