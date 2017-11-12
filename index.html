@@ -1,0 +1,162 @@
+<!DOCTYPE html>
+<html lang="en">
+
+<head>
+    <meta charset="UTF-8">
+    <meta name="viewport" content="width=device-width, initial-scale=1.0">
+    <meta http-equiv="X-UA-Compatible" content="ie=edge">
+    <title>The-Grid Record</title>
+    <style>
+        body {
+            font-family: 'Consolas';
+        }
+    </style>
+    <script>records = null;</script>
+</head>
+
+<body>
+
+    <form class="form" action="">
+        <input class="userKey" type="text" placeholder="Grid Export Key" required>
+        <select class="select" name="item">
+            <!-- <option value="lastest">Lastest</option> -->
+            <option value="ap">AP</option>
+            <option value="portals_visited">Portals Visited</option>
+            <option value="portals_discovered">Portals Discovered</option>
+            <option value="hacks">Hacks</option>
+            <option value="resonators_deployed">Resonators Deployed</option>
+            <option value="links_created">Links Created</option>
+            <option value="fields_created">Fields Created</option>
+            <option value="resonators_destroyed">Resonators Destroyed</option>
+            <option value="links_destroyed">Links Destroyed</option>
+            <option value="fields_destroyed">Fields Destroyed</option>
+            <option value="max_time_portal_held">Max Time Portal Held</option>
+            <option value="xm_collected">XM Collected</option>
+            <option value="opr_agreements">OPR Agreements</option>
+            <option value="mu_captured">MU Captured</option>
+            <option value="longest_link">Longest Link</option>
+            <option value="largest_field">Largest Field</option>
+            <option value="xm_recharged">XM Recharged</option>
+            <option value="portals_captured">Portals Captured</option>
+            <option value="unique_portals_captured">Unique Portals Captured</option>
+            <option value="portals_neutralized">Portals Neutralized</option>
+            <option value="link_maintained_max_days">Link Maintained Max Days</option>
+            <option value="link_length_x_days_max">Link Length x Days Max</option>
+            <option value="field_held_max_days">Field Held Max Days</option>
+            <option value="largest_field_x_days_max">Largest Field x Days Max</option>
+            <option value="distance_walked">Distance Walked</option>
+            <option value="mods_deployed">Mods Deployed</option>
+            <option value="unique_missions_completed">Unique Missions Completed</option>
+            <option value="mission_days_attended">Mission Days Attended</option>
+            <option value="glyph_points">Glyph Points</option>
+            <option value="hacking_streak_max_days">Hacking Streak Max Days</option>
+            <option value="agents_recruited">Agents Recruited</option>
+        </select>
+        <input class="submit" type="submit" value="Submit">
+    </form>
+
+    <div class="msg"></div>
+    <div class="chart"></div>
+    <div class="data"></div>
+    <div class="log"></div>
+
+    <script src="https://ajax.googleapis.com/ajax/libs/jquery/3.2.1/jquery.min.js"></script>
+    <script src="https://d3js.org/d3.v4.min.js"></script>
+    <script>
+        function timeConverter(UNIX_timestamp) {
+            var a = new Date(UNIX_timestamp * 1000);
+            var months = ['Jan', 'Feb', 'Mar', 'Apr', 'May', 'Jun', 'Jul', 'Aug', 'Sep', 'Oct', 'Nov', 'Dec'];
+            var year = a.getFullYear();
+            var month = a.getMonth() + 1;
+            var date = a.getDate();
+            var hour = a.getHours();
+            var min = a.getMinutes();
+            var sec = a.getSeconds();
+            month = month < 10 ? '0' + month : month;
+            date = date < 10 ? '0' + date : date;
+            hour = hour < 10 ? '0' + hour : hour;
+            min = min < 10 ? '0' + min : min;
+            sec = sec < 10 ? '0' + sec : sec;
+            return [year, month, date].join('/') + ' ' + [hour, min].join(':');
+        }
+    </script>
+    <script>
+        function getData(item) {
+            var data = [];
+            for (let i = 0; i < records.length; i++) {
+                var record = records[i];
+                data.push([record['timestamp'], record['stats'][item]]);
+            }
+            return data;
+        }
+    </script>
+
+    <script>
+        $('.form').submit(function (event) {
+            event.preventDefault();
+            var gridUrl = 'https://the-grid.org/r/export/';
+            var userKey = $('.userKey').val() || '';
+            console.log('ready ' + userKey);
+            if (records) {
+                return draw();
+            }
+            $('.msg').text('Loading...');
+            $.ajax({
+                url: gridUrl,
+                type: 'GET',
+                dataType: 'json',
+                data: {
+                    'key': userKey,
+                    't0': '',
+                    't1': '',
+                    'dir': '',
+                },
+                startTime: performance.now(),
+                success: function (response) {
+                    records = response;
+                    $('.msg').text(response.length + ' records.');
+                    var during = ((performance.now() - this.startTime) / 1000).toFixed(1);
+                    $('.msg').append(' Spend ' + during + ' sec.');
+
+                    draw();
+                },
+                error: function (error) {
+                    $('.log').text(error);
+                }
+            });
+        });
+
+        $('.select').change(function () {
+            if (records) {
+                draw();
+            }
+        });
+    </script>
+
+    <script>
+        function draw() {
+            d3.select('.chart').selectAll('*').remove();
+            var item = $('.select').val();
+            var data = getData(item);
+            var lastestValue = data[0][1];
+            var chart = d3.select('.chart').selectAll('div').data(data);
+            var chartSet = chart.enter().append('div');
+            chartSet.exit().remove();
+            chartSet.style('height', '20px');
+            chartSet.style('width', '500px');
+            chartSet.style('margin', '2px');
+            chartSet.style('background', function (data, index) {
+                var value = data[1];
+                var percent = Math.round(value / lastestValue * 100);
+                return 'linear-gradient(90deg, #00BBFF ' + percent + '%, #ffffff ' + (1 - percent) + '%)';
+            });
+            chartSet.text(function (data, index) {
+                var ts = data[0];
+                var value = data[1];
+                return timeConverter(ts) + ' - ' + value;
+            });
+        }
+    </script>
+</body>
+
+</html>
