@@ -17,7 +17,7 @@
 <body>
 
     <form class="form" action="">
-        <input class="userKey" type="text" placeholder="Grid Export Key" required>
+        <input class="userKey" type="text" placeholder="Grid Export Key" required autofocus>
         <select class="select" name="item">
             <!-- <option value="lastest">Lastest</option> -->
             <option value="ap">AP</option>
@@ -52,6 +52,7 @@
             <option value="hacking_streak_max_days">Hacking Streak Max Days</option>
             <option value="agents_recruited">Agents Recruited</option>
         </select>
+        <input type="checkbox" class="saveKey">Save Key
         <input class="submit" type="submit" value="Submit">
     </form>
 
@@ -97,7 +98,9 @@
             var gridUrl = 'https://the-grid.org/r/export/';
             var userKey = $('.userKey').val() || '';
             if (records) {
-                return draw();
+                draw();
+                store();
+                return;
             }
             $('.msg').text('Loading...');
             $.ajax({
@@ -117,7 +120,10 @@
                     var during = ((performance.now() - this.startTime) / 1000).toFixed(1);
                     $('.msg').append(' Spend ' + during + ' sec.');
 
-                    draw();
+                    if (records) {
+                        draw();
+                        store();
+                    }
                 },
                 error: function (error) {
                     $('.log').text(error);
@@ -154,6 +160,27 @@
                 var value = data[1];
                 return timeConverter(ts) + ' - ' + value;
             });
+        }
+
+        function store() {
+            if ($('.saveKey').prop('checked')) {
+                localStorage.setItem('userKey', $('.userKey').val());
+                localStorage.setItem('saveKey', 'true');
+            } else {
+                localStorage.removeItem('userKey');
+                localStorage.removeItem('saveKey');
+            }
+        }
+    </script>
+
+    <script>
+        var userKey = localStorage.getItem('userKey');
+        var saveKey = localStorage.getItem('saveKey');
+        if (userKey) {
+            $('.userKey').val(userKey);
+        }
+        if (saveKey) {
+            $('.saveKey').prop('checked', true);
         }
     </script>
 </body>
