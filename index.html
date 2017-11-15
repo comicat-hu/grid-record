@@ -146,20 +146,28 @@
             var lastestValue = data[0][1];
             var chart = d3.select('.chart').selectAll('div').data(data);
             var chartSet = chart.enter().append('div');
+            chartSet.style('height', '20px')
+                    .style('width', '0%')
+                    .style('margin', '2px')
+                    .style('color', 'rgba(0, 0, 0, 0.0)')
+                    .style('background', function (data, index) {
+                        var value = data[1];
+                        var percent = Math.round(value / lastestValue * 100);
+                        return 'linear-gradient(90deg, #00BBFF ' + percent + '%, #ffffff ' + (1 - percent) + '%)';
+                    })
+                    .text(function (data, index) {
+                        var ts = data[0];
+                        var value = data[1];
+                        return timeConverter(ts) + ' - ' + value;
+                    })
+                    .transition()
+                    .duration(800)
+                    .style('width', '80%')
+                    .transition()
+                    .duration(500)
+                    .style('color', 'rgba(0, 0, 0, 1.0)');
+
             chartSet.exit().remove();
-            chartSet.style('height', '20px');
-            chartSet.style('width', '80%');
-            chartSet.style('margin', '2px');
-            chartSet.style('background', function (data, index) {
-                var value = data[1];
-                var percent = Math.round(value / lastestValue * 100);
-                return 'linear-gradient(90deg, #00BBFF ' + percent + '%, #ffffff ' + (1 - percent) + '%)';
-            });
-            chartSet.text(function (data, index) {
-                var ts = data[0];
-                var value = data[1];
-                return timeConverter(ts) + ' - ' + value;
-            });
         }
 
         function store() {
